@@ -22,8 +22,8 @@ class GolangCILint(Linter):
     """Provides an interface to golangci-lint."""
 
     syntax = ('go', 'gosublime-go', 'gotools', 'anacondago-go')
-    cmd = 'golangci-lint run --fast --enable typecheck'
-    regex = r'(?:[^:]+):(?P<line>\d+):(?P<col>\d+)?:\s*(?P<message>.*)'
+    cmd = 'golangci-lint run'
+    regex = r'(?:[^:]+):(?P<line>\d+):(?P<col>\d+)?:?\s*(?P<message>.*)'
     error_stream = util.STREAM_BOTH
     default_type = highlight.ERROR
 
@@ -63,7 +63,7 @@ class GolangCILint(Linter):
             return
         filename = os.path.basename(self.filename)
         print('golangci-lint: in-place linting {}: {}'.format(filename, ' '.join(map(shlex.quote, cmd))))
-        out = util.communicate(cmd, output_stream=util.STREAM_BOTH, env=env, cwd=dir)
+        out = self._communicate(cmd)
         return out or ''
 
 
