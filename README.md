@@ -1,25 +1,22 @@
-SublimeLinter-contrib-golangci-lint
-================================
+# SublimeLinter-contrib-golangci-lint
 
-This linter plugin for [SublimeLinter][docs] provides an interface to [golangci-lint](https://github.com/golangci/golangci-lint). It will be used with files that have the “Go” syntax.
+This linter plugin for [SublimeLinter][docs] provides an interface to [golangci-lint](https://github.com/golangci/golangci-lint), a linter for Go (golang).
 
 ## Installation
-SublimeLinter 3 must be installed in order to use this plugin. If SublimeLinter 3 is not installed, please follow the instructions [here][installation].
+
+SublimeLinter 3 must be installed in order to use this plugin.
+
+If SublimeLinter 3 is not installed, please follow the instructions [here][installation].
 
 ### Linter installation
-Before using this plugin, you must ensure that `golangci-lint` is installed on your system. To install `golangci-lint`, do the following:
 
-1. Install [Go](http://golang.org/doc/install).
+Before using this plugin, you must ensure that `golangci-lint` is installed on your system.
 
-1. Install `golangci-lint` by typing the following in a terminal:
-   ```
-   go get github.com/golangci/golangci-lint/cmd/golangci-lint
-   ```
+Please refer to the official [installation instructions](https://github.com/golangci/golangci-lint#install).
 
 ### Linter configuration
-In order for `golangci-lint` to be executed by SublimeLinter, you must ensure that its path is available to SublimeLinter. Before going any further, please read and follow the steps in [“Finding a linter executable”](http://sublimelinter.readthedocs.org/en/latest/troubleshooting.html#finding-a-linter-executable) through “Validating your PATH” in the documentation.
 
-Once you have installed `golangci-lint`, you can proceed to install the SublimeLinter-contrib-golangci-lint plugin if it is not yet installed.
+In order for `golangci-lint` to be executed by SublimeLinter, you must ensure that its path is available to SublimeLinter. Before going any further, please read and follow the steps in [“Finding a linter executable”](http://sublimelinter.readthedocs.org/en/latest/troubleshooting.html#finding-a-linter-executable) through “Validating your PATH” in the documentation. Once you have installed `golangci-lint`, you can proceed to install the SublimeLinter-contrib-golangci-lint plugin if it is not yet installed.
 
 ### Plugin installation
 
@@ -28,7 +25,6 @@ Please use [Package Control][pc] to install the linter plugin. This will ensure 
 To install via Package Control, do the following:
 
 1. Within Sublime Text, bring up the [Command Palette][cmd] and type `install`. Among the commands you should see `Package Control: Install Package`. If that command is not highlighted, use the keyboard or mouse to select it. There will be a pause of a few seconds while Package Control fetches the list of available plugins.
-
 1. When the plugin list appears, type `golangci-lint`. Among the entries you should see `SublimeLinter-contrib-golangci-lint`. If that entry is not highlighted, use the keyboard or mouse to select it.
 
 ## Usage
