@@ -4,21 +4,34 @@ This linter plugin for [SublimeLinter][docs] provides an interface to [golangci-
 
 ## Installation
 
-SublimeLinter 3 must be installed in order to use this plugin.
+- Install SublimeLinter 3 from [here](https://packagecontrol.io/packages/SublimeLinter)
+- Install SublimeLinter-golangcilint from [here](https://packagecontrol.io/packages/SublimeLinter-contrib-golang-cilint)
+- Install the `golangci-lint` helper from [here](https://github.com/golangci/golangci-lint#install)
 
-If SublimeLinter 3 is not installed, please follow the instructions [here][installation].
-
-### Linter installation
-
-Before using this plugin, you must ensure that `golangci-lint` is installed on your system.
-
-Please refer to the official [installation instructions](https://github.com/golangci/golangci-lint#install).
-
-### Linter configuration
+## Configuration
 
 In order for `golangci-lint` to be executed by SublimeLinter, you must ensure that its path is available to SublimeLinter. Before going any further, please read and follow the steps in [“Finding a linter executable”](http://sublimelinter.readthedocs.org/en/latest/troubleshooting.html#finding-a-linter-executable) through “Validating your PATH” in the documentation. Once you have installed `golangci-lint`, you can proceed to install the SublimeLinter-contrib-golangci-lint plugin if it is not yet installed.
 
-### Plugin installation
+**Note:** The linter creates a temporary directory to allow SublimeLinter to scan changes in the code that are still in the buffer _(aka. not saved yet)_. If the SublimeText sidebar is visible, you will notice _—for a split of a second—_ that a folder named `.golangcilint-*` appears and disappears. Make sure to add this folder to your `.gitignore` file, and also the “folder_exclude_patterns” in SublimeText’s preferences:
+
+```
+{
+    "folder_exclude_patterns":
+    [
+        ".svn",
+        ".git",
+        ".hg",
+        "CVS",
+        "cache",
+        "uploads",
+        ".golangci-*",
+        ".golangcilint-*",
+        ".gometalinter-*"
+    ],
+}
+```
+
+## Plugin installation
 
 Please use [Package Control][pc] to install the linter plugin. This will ensure that the plugin will be updated when new versions are available. If you want to install from source so you can modify the source code, you probably know what you are doing so we won’t cover that here.
 
