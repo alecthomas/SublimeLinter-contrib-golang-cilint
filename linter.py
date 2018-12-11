@@ -79,9 +79,30 @@ class Golangcilint(Linter):
 
     def execute(self, cmd):
         lines = []
+        usable = []
         output = self.communicate(cmd)
         report = json.loads(output)
         currnt = os.path.basename(self.filename)
+
+        # Go 1.4 introduces an annotation for package clauses in Go source that
+        # identify a canonical import path for the package. If an import is
+        # attempted using a path that is not canonical, the go command will
+        # refuse to compile the importing package.
+        #
+        # When the linter runs, it creates a temporary directory, for example,
+        # “.golangcilint-foobar”, then creates a symbolic link for all relevant
+        # files, and writes the content of the current buffer in the correct
+        # file. Unfortunately, canonical imports break this flow because the
+        # temporary directory differs from the expected location.
+        #
+        # The only way to deal with this for now is to detect the error, which
+        # may as well be a false positive, and then ignore all the warnings
+        # about missing packages in the current file. Hopefully, the user has
+        # “goimports” which will automatically resolve the dependencies for
+        # them. Also, if the false positives are not, the programmer will know
+        # about the missing packages during the compilation phase, so it’s not
+        # a bad idea to ignore these warnings for now.
+        ignore_broken_imports = False
 
         """merge possible stderr with issues"""
         if "Error" in report["Report"]:
@@ -105,11 +126,27 @@ class Golangcilint(Linter):
             mark = name.rfind("/")
             mark = 0 if mark == -1 else mark+1
             issue["Pos"]["Shortname"] = name[mark:]
-            """decide if it is a warning or error"""
             issue["Level"] = self.issue_level(issue)
+            usable.append(issue)
+
+        """remove useless warnings and errors"""
+        for issue in usable:
+            """detect broken canonical imports"""
+            if ("code in directory" in issue["Text"]
+                and "expects import" in issue["Text"]):
+                ignore_broken_imports = True
+                continue
+
+            """ignore false positive warnings"""
+            if (ignore_broken_imports
+                and "could not import" in issue["Text"]
+                and "missing package:" in issue["Text"]):
+                continue
+
             """skip issues from unrelated files"""
             if issue["Pos"]["Shortname"] != currnt:
                 continue
+
             lines.append(
                 "{}:{}:{}:{}:{}".format(
                     issue["Pos"]["Shortname"],
