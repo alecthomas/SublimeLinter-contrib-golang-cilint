@@ -74,6 +74,7 @@ class Golangcilint(Linter):
             return ""
 
     def issue_level(self, issue):
+        """consider /dev/stderr as errors and /dev/stdout as warnings"""
         return "error" if issue["FromLinter"] == "typecheck" else "warning"
 
     def execute(self, cmd):
