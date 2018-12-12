@@ -22,6 +22,7 @@ class Golangcilint(Linter):
     regex = r"(?:[^:]+):(?P<line>\d+):(?P<col>\d+):(?:(?P<warning>warning)|(?P<error>error)):(?P<message>.*)"
     defaults = {"selector": "source.go"}
     error_stream = util.STREAM_STDOUT
+    shortname = "unknown.go"
     multiline = False
 
     def run(self, cmd, code):
@@ -29,6 +30,7 @@ class Golangcilint(Linter):
         if not dir:
             print("golangcilint: skipped linting of unsaved file")
             return
+        self.shortname = os.path.basename(self.filename)
         if settings.get("lint_mode") == "background":
             return self._live_lint(cmd, code)
         else:
@@ -77,13 +79,9 @@ class Golangcilint(Linter):
         """consider /dev/stderr as errors and /dev/stdout as warnings"""
         return "error" if issue["FromLinter"] == "typecheck" else "warning"
 
-    def execute(self, cmd):
-        lines = []
-        usable = []
-        output = self.communicate(cmd)
-        report = json.loads(output)
-        currnt = os.path.basename(self.filename)
-
+    def canonical_error(self, issue):
+        mark = issue["Text"].rfind("/")
+        package = issue["Text"][mark+1:-1]
         # Go 1.4 introduces an annotation for package clauses in Go source that
         # identify a canonical import path for the package. If an import is
         # attempted using a path that is not canonical, the go command will
@@ -102,7 +100,42 @@ class Golangcilint(Linter):
         # them. Also, if the false positives are not, the programmer will know
         # about the missing packages during the compilation phase, so it’s not
         # a bad idea to ignore these warnings for now.
-        ignore_broken_imports = False
+        #
+        # See: https://golang.org/doc/go1.4#canonicalimports
+        return {
+            "FromLinter": "typecheck",
+            "Text": "cannot lint package “{}” due to canonical import path".format(package),
+            "Replacement": issue["Replacement"],
+            "SourceLines": issue["SourceLines"],
+            "Level": "error",
+            "Pos": {
+                "Filename": self.filename,
+                "Shortname": self.shortname,
+                "Offset": 0,
+                "Column": 0,
+                "Line": 1
+            }
+        }
+
+    def formalize(self, issues):
+        lines = []
+        for issue in issues:
+            lines.append(
+                "{}:{}:{}:{}:{}".format(
+                    issue["Pos"]["Shortname"],
+                    issue["Pos"]["Line"],
+                    issue["Pos"]["Column"],
+                    issue["Level"],
+                    issue["Text"]
+                )
+            )
+        return "\n".join(lines)
+
+    def execute(self, cmd):
+        issues = []
+        ignore = False
+        output = self.communicate(cmd)
+        report = json.loads(output)
 
         """merge possible stderr with issues"""
         if "Error" in report["Report"]:
@@ -127,34 +160,22 @@ class Golangcilint(Linter):
             mark = 0 if mark == -1 else mark+1
             issue["Pos"]["Shortname"] = name[mark:]
             issue["Level"] = self.issue_level(issue)
-            usable.append(issue)
 
-        """remove useless warnings and errors"""
-        for issue in usable:
             """detect broken canonical imports"""
             if ("code in directory" in issue["Text"]
                 and "expects import" in issue["Text"]):
-                ignore_broken_imports = True
+                issues.append(self.canonical_error(issue))
+                ignore = True
                 continue
 
             """ignore false positive warnings"""
-            if (ignore_broken_imports
+            if (ignore
                 and "could not import" in issue["Text"]
                 and "missing package:" in issue["Text"]):
                 continue
 
-            """skip issues from unrelated files"""
-            if issue["Pos"]["Shortname"] != currnt:
-                continue
+            """report issues relevant to this file"""
+            if issue["Pos"]["Shortname"] == self.shortname:
+                issues.append(issue)
 
-            lines.append(
-                "{}:{}:{}:{}:{}".format(
-                    issue["Pos"]["Shortname"],
-                    issue["Pos"]["Line"],
-                    issue["Pos"]["Column"],
-                    issue["Level"],
-                    issue["Text"]
-                )
-            )
-
-        return "\n".join(lines)
+        return self.formalize(issues)
