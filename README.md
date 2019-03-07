@@ -1,3 +1,6 @@
+# DEPRECATED: Use https://github.com/cixtor/SublimeLinter-golangcilint
+
+
 SublimeLinter-contrib-golangci-lint
 ================================
 
